@@ -115,12 +115,24 @@ const maxSharedURLLength=7000;
 function sharedLessonData(data){
  return {startedAt:data.startedAt,endedAt:data.endedAt||null,faults:data.faults.map(f=>({category:f.category,fault:f.fault,type:f.type,time:f.time,location:f.location||null}))};
 }
+function encodeLessonValue(data){
+ // Compress the JSON, then use the Base64URL alphabet: no +, / or padding.
+ return 'v2.'+LZString.compressToBase64(JSON.stringify(sharedLessonData(data))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decodeLessonValue(value){
+ if(value.startsWith('v2.')){
+  const token=value.slice(3);
+  if(!/^[A-Za-z0-9_-]+$/.test(token)||token.length%4===1)throw new Error('Invalid test encoding.');
+  const base64=token.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-token.length%4)%4);
+  return LZString.decompressFromBase64(base64);
+ }
+ // Continue opening links shared by earlier versions.
+ if(value.startsWith('v1.'))return LZString.decompressFromEncodedURIComponent(value.slice(3));
+ return value;
+}
 function createShareURL(data){
  const url=new URL(window.location.href);url.search='';url.hash='';
- const json=JSON.stringify(sharedLessonData(data));
- // Keep small links as encoded JSON; compact larger reports to fit messaging/browser limits.
- url.searchParams.set('lesson',json);
- if(url.href.length>maxSharedURLLength)url.searchParams.set('lesson','v1.'+LZString.compressToEncodedURIComponent(json));
+ url.searchParams.set('lesson',encodeLessonValue(data));
  if(url.href.length>maxSharedURLLength)throw new Error('This test is too large for a reliable share link. The sheet is still available here.');
  return url.href;
 }
@@ -145,8 +157,7 @@ function loadSharedLesson(){
  readOnly=true;
  try{
   if(url.href.length>maxSharedURLLength)throw new Error('Test link is too large.');
-  let text=url.searchParams.get('lesson');
-  if(text.startsWith('v1.'))text=LZString.decompressFromEncodedURIComponent(text.slice(3));
+  const text=decodeLessonValue(url.searchParams.get('lesson'));
   if(typeof text!=='string'||text.length>2*1024*1024)throw new Error('Invalid test data.');
   openReadOnlyLesson(parseLessonJSON(text));
  }

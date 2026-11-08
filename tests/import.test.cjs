@@ -22,20 +22,20 @@ test('plain URL always shows a fresh marking sheet without saved/upload controls
 });
 test('Finish redirects to the encoded read-only report and includes GPS',()=>{
  const a=app();a.run('latestPosition={timestamp:Date.now(),coords:{latitude:51.5,longitude:-0.1,accuracy:8}}');record(a,'serious');a.element('finish').onclick();
- assert.ok(a.navigation);const data=JSON.parse(new URL(a.navigation).searchParams.get('lesson'));assert.ok(data.endedAt);assert.equal(data.faults[0].location.lat,51.5);assert.equal(data.faults[0].type,'serious');
+ assert.ok(a.navigation);const data=JSON.parse(a.run(`decodeLessonValue(${JSON.stringify(new URL(a.navigation).searchParams.get('lesson'))})`));assert.ok(data.endedAt);assert.equal(data.faults[0].location.lat,51.5);assert.equal(data.faults[0].type,'serious');
  const report=app(a.navigation);assert.equal(report.run('readOnly'),true);assert.equal(report.element('sheet').hidden,true);assert.equal(report.element('finish').hidden,true);assert.equal(report.element('undo').hidden,true);assert.equal(report.element('share').hidden,false);assert.equal(report.element('reviewTitle').textContent,'Results');assert.match(report.element('log').innerHTML,/51\.50000/);
  record(report);report.element('undo').onclick();report.element('finish').onclick();assert.equal(report.run('session.faults.length'),1);assert.equal(report.navigation,null);
  report.element('newLesson').onclick();assert.equal(report.navigation,'https://certifiedjimenez.github.io/drivelog/');
 });
 test('zero-fault lessons can finish and open as a report',()=>{const a=app();a.element('finish').onclick();const b=app(a.navigation);assert.equal(b.run('readOnly'),true);assert.equal(b.run('session.faults.length'),0);assert.equal(b.element('share').hidden,false);});
 test('invalid query parameters never expose an editable sheet',()=>{
- for(const encoded of ['broken','',JSON.stringify({faults:[]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],type:'__proto__'}]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],location:{lat:91,lng:0,accuracy:5}}]}),'v1.invalid']){
+ for(const encoded of ['broken','',JSON.stringify({faults:[]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],type:'__proto__'}]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],location:{lat:91,lng:0,accuracy:5}}]}),'v1.invalid','v2.invalid!','v2.A']){
   const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',encoded);const a=app(u.href);assert.equal(a.run('readOnly'),true);assert.equal(a.element('sheet').hidden,true);assert.equal(a.element('share').hidden,true);assert.equal(a.element('reviewTitle').textContent,'Test link unavailable');
  }
 });
 test('large reports compact the JSON inside the query and preserve every fault',()=>{
  const data=lesson();data.faults=Array.from({length:100},(_,i)=>({...data.faults[0],category:'Signs & signals / 道路',time:new Date(Date.parse(data.startedAt)+i*1000).toISOString(),location:{lat:51.5+i/10000,lng:-.1,accuracy:8}}));
- const a=app();const url=a.run(`createShareURL(${JSON.stringify(data)})`);assert.ok(new URL(url).searchParams.get('lesson').startsWith('v1.'));assert.ok(url.length<7000);
+ const a=app();const url=a.run(`createShareURL(${JSON.stringify(data)})`);assert.ok(new URL(url).searchParams.get('lesson').startsWith('v2.'));assert.ok(url.length<7000);
  const report=app(url);assert.equal(report.run('session.faults.length'),100);assert.equal(report.run('session.faults[99].category'),data.faults[99].category);assert.equal(report.run('session.faults[99].location.lat'),data.faults[99].location.lat);
 });
 test('native sharing and copy-link fallback work from a read-only report',async()=>{
@@ -53,4 +53,17 @@ test('results summarise category, fault, severity, counts and every recorded tim
  const toolbar=html.slice(html.indexOf('<div class="toolbar">'),html.indexOf('<p id="instruction">'));assert.match(toolbar,/id="share"/);assert.match(toolbar,/id="newLesson"/);assert.match(toolbar,/id="undo"[^>]*>Undo Mark<\/button><button id="finish"/);assert.doesNotMatch(html,/<header>/);
  const empty=app(link({...lesson(),faults:[]}));assert.match(empty.element('reviewBreakdown').innerHTML,/No faults recorded/);
  const unsafe=lesson();unsafe.faults[0].category='<img src=x onerror=alert(1)>';const safe=app(link(unsafe));assert.doesNotMatch(safe.element('reviewBreakdown').innerHTML,/<img/);
+});
+
+test('every new link uses compressed Base64URL without JSON punctuation or padding',()=>{
+ const data=lesson();data.faults[0].category='Signals & signs / 道路 🚦';
+ const a=app();const url=a.run(`createShareURL(${JSON.stringify(data)})`);const value=new URL(url).searchParams.get('lesson');
+ assert.match(value,/^v2\.[A-Za-z0-9_-]+$/);assert.doesNotMatch(url,/[{}%+]/);assert.equal(new URL(url).searchParams.size,1);
+ const recipient=app(url);assert.equal(recipient.run('session.faults[0].category'),data.faults[0].category);assert.equal(recipient.run('session.faults[0].location.lat'),51.5);
+ const broken=new URL(url);broken.searchParams.set('lesson',value.slice(0,-8));const invalid=app(broken.href);assert.equal(invalid.element('reviewTitle').textContent,'Test link unavailable');
+});
+test('old JSON and v1 compressed links remain readable',()=>{
+ const a=app();const data=lesson();const json=JSON.stringify(data);const encoded=a.run(`'v1.'+LZString.compressToEncodedURIComponent(${JSON.stringify(json)})`);
+ const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',encoded);
+ for(const url of [link(data),u.href]){const report=app(url);assert.equal(report.run('readOnly'),true);assert.equal(report.run('session.faults[0].type'),'serious');}
 });
