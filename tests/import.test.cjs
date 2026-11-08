@@ -50,7 +50,7 @@ test('results summarise category, fault, severity, counts and every recorded tim
  assert.match(summary,/Junctions/);assert.match(summary,/Observation/);assert.match(summary,/Serious/);assert.match(summary,/<td>2<\/td>/);assert.match(summary,/Minor/);
  assert.match(summary,/datetime="2026-11-08T10:10:00Z"/);assert.match(summary,/datetime="2026-11-08T10:12:03Z"/);
  const timing=a.element('reviewTiming').innerHTML;assert.match(timing,/Started/);assert.match(timing,/Finished/);assert.match(timing,/30 min 0 sec/);
- const toolbar=html.slice(html.indexOf('<div class="toolbar">'),html.indexOf('<p id="instruction">'));assert.match(toolbar,/id="share"/);assert.match(toolbar,/id="newLesson"/);assert.match(toolbar,/id="undo"[^>]*>Undo last<\/button><button id="finish"/);assert.doesNotMatch(html,/<header>/);
+ const toolbar=html.slice(html.indexOf('<div class="toolbar">'),html.indexOf('<p id="instruction">'));assert.match(toolbar,/id="share"/);assert.match(toolbar,/id="newLesson"/);assert.match(toolbar,/id="undo"[^>]*>Undo mark<\/button><button id="finish"/);assert.doesNotMatch(html,/<header>/);
  const empty=app(link({...lesson(),faults:[]}));assert.match(empty.element('reviewBreakdown').innerHTML,/No faults recorded/);
  const unsafe=lesson();unsafe.faults[0].category='<img src=x onerror=alert(1)>';const safe=app(link(unsafe));assert.doesNotMatch(safe.element('reviewBreakdown').innerHTML,/<img/);
 });
