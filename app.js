@@ -42,7 +42,6 @@ function render(){
  $('undo').disabled=ended||!session?.faults.length;
  $('total').textContent=session?.faults.length||0;
  $('share').hidden=!readOnly||!session;
- $('export').disabled=!session;
  $('sheet').innerHTML=groups.map(([category, faults], gi)=>`<section class="group"><h2>${escapeHTML(category)}</h2>${faults.map((fault,fi)=>{const records=session?.faults.filter(f=>f.category===category&&f.fault===fault)||[];const tally=['minor','serious','dangerous'].map(t=>{const n=records.filter(f=>f.type===t).length;return n?`<span class="${t}-text">${n} ${labels[t]}</span>`:'';}).filter(Boolean).join(' · ');return `<button class="fault" data-group="${gi}" data-fault="${fi}"><span>${escapeHTML(fault)}</span><span class="tally">${tally||'<span class="plus">＋</span>'}</span></button>`;}).join('')}</section>`).join('');
  const faults=session?.faults||[];
  $('log').innerHTML=faults.length?faults.map((f,i)=>`<li class="log-item"><span class="number" style="color:${colors[f.type]}">${i+1}</span><div class="body"><strong>${escapeHTML(f.category)} · ${escapeHTML(f.fault)}</strong><p><span class="${f.type}-text">${labels[f.type]}</span> · ${new Date(f.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}<br>${f.location?`<a href="https://www.openstreetmap.org/?mlat=${f.location.lat}&mlon=${f.location.lng}#map=18/${f.location.lat}/${f.location.lng}" target="_blank" rel="noreferrer">${f.location.lat.toFixed(5)}, ${f.location.lng.toFixed(5)} ↗</a> · accuracy ±${Math.round(f.location.accuracy)} m`:f.gpsPending?'Getting location…':'No GPS location recorded'}</p></div></li>`).reverse().join(''):'<li class="empty">No faults recorded yet.</li>';
@@ -72,7 +71,6 @@ $('finish').onclick=()=>{
  catch(error){notify(error.message);}
 };
 $('newLesson').onclick=()=>{const url=new URL(window.location.href);url.search='';url.hash='';window.location.assign(url.href);};
-$('export').onclick=()=>{if(!session)return;const data={...session,faults:session.faults.map(f=>({...f,gpsPending:false})),source:'DVSA DL25 categories; independent practice record'};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`driving-lesson-${session.startedAt.slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 // Validate the report supplied in the URL before rendering it.
 function parseLessonJSON(text){
  const data=JSON.parse(text);
@@ -105,7 +103,7 @@ function createShareURL(data){
  // Keep small links as encoded JSON; compact larger reports to fit messaging/browser limits.
  url.searchParams.set('lesson',json);
  if(url.href.length>maxSharedURLLength)url.searchParams.set('lesson','v1.'+LZString.compressToEncodedURIComponent(json));
- if(url.href.length>maxSharedURLLength)throw new Error('This lesson is too large for a reliable share link. Use Download JSON to keep the full report.');
+ if(url.href.length>maxSharedURLLength)throw new Error('This lesson is too large for a reliable share link. The sheet is still available here.');
  return url.href;
 }
 function showShareLink(url){$('shareLink').value=url;$('shareDialog').showModal();}

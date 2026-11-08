@@ -17,7 +17,7 @@ function lesson(){return {startedAt:'2026-11-08T10:00:00Z',endedAt:'2026-11-08T1
 function link(data){const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',JSON.stringify(data));return u.href;}
 function record(a,type='minor'){a.run(`selected={category:'Control',fault:'Steering'};record('${type}')`);}
 test('plain URL always shows a fresh marking sheet without saved/upload controls',()=>{
- const a=app();assert.equal(a.run('readOnly'),false);assert.equal(a.run('session.faults.length'),0);assert.equal(a.element('sheet').hidden,false);assert.equal(a.element('finish').hidden,false);assert.equal(a.element('finish').disabled,false);assert.equal(a.element('review').hidden,true);assert.equal(a.element('share').hidden,true);assert.doesNotMatch(html,/id="(?:history|upload|jsonFile|learner|finishDialog)"/);
+ const a=app();assert.equal(a.run('readOnly'),false);assert.equal(a.run('session.faults.length'),0);assert.equal(a.element('sheet').hidden,false);assert.equal(a.element('finish').hidden,false);assert.equal(a.element('finish').disabled,false);assert.equal(a.element('review').hidden,true);assert.equal(a.element('share').hidden,true);assert.doesNotMatch(html,/id="(?:history|upload|jsonFile|learner|finishDialog|export)"/);
  record(a);record(a,'serious');record(a,'dangerous');assert.equal(a.run('session.faults.length'),3);a.element('undo').onclick();assert.equal(a.run('session.faults.length'),2);
 });
 test('Finish redirects to the encoded read-only report and includes GPS',()=>{

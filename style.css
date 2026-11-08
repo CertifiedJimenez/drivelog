@@ -3,4 +3,4 @@
 
 #share{margin-top:16px;background:var(--green);color:white;border-color:var(--green)}#shareLink{display:block;width:100%;margin:10px 0 16px;padding:10px;resize:vertical;border:1px solid #d2dbd5;border-radius:5px;font:12px system-ui;color:#18382d}#shareDialog label{font-size:12px}#shareDialog p{line-height:1.6}
 
-.report-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.report-actions #share{margin:0}.report-actions #export{font-size:13px}
+.report-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.report-actions #share{margin:0}
