@@ -2,22 +2,27 @@
 
 A plain HTML, CSS and JavaScript app based on the DVSA DL25 fault sheet.
 
-1. Open `index.html` for a quick look, or serve this folder locally:
-   ```sh
-   python3 -m http.server 8080 --bind 127.0.0.1
-   ```
-2. Visit http://localhost:8080.
-3. Tap a fault, then choose Minor, Serious (major) or Dangerous. That records it.
-4. Finish the lesson to review the log, map and download the JSON record.
+Run locally:
+```sh
+python3 -m http.server 8080 --bind 127.0.0.1
+```
+Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localhost also works.
 
-Every fault stores category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing or denied GPS is shown explicitly, without inventing a location. A fix must be within 15 seconds of the fault time to attach to the record. Leaflet is bundled locally; OpenStreetMap tiles need internet. The map does not draw or store a continuous route.
+- Normal URL: a fresh marking sheet. Tap a fault, then Minor, Serious (major) or Dangerous.
+- **Finish lesson**: redirects to a URL with the lesson JSON encoded in the `lesson` query parameter. No extra confirmation step.
+- URL with `?lesson=…`: read-only report with fault counts, log, map and **Share lesson**. Invalid links show an error rather than an editable sheet.
+- **Share lesson**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
+- **New lesson**: returns to the normal URL with a fresh sheet.
+- **Download JSON**: keeps a file backup if wanted.
 
-**Share lesson** puts a JSON snapshot directly in the URL’s `lesson` query parameter. Opening the link automatically displays the fault log and map read-only. iPhone browsers with native sharing open the share sheet, where WhatsApp can be selected if available; other browsers offer a link to copy. The link contains the recorded GPS locations, is not encrypted, and anyone receiving it can view the lesson. It does not update when the original lesson changes. Very large lessons (URLs over 7,000 characters) must use JSON export/upload instead. No link shortener or server-side lesson storage is used.
+There is no saved-lesson list, JSON upload, account or server-side lesson storage. An unfinished sheet is held only in the current page; finish or download it before refreshing/closing the page. Completed reports reload directly from their URL. Existing saved data from earlier versions is left untouched but is no longer read.
 
-**Upload JSON** opens an exported lesson as a temporary read-only view with its counts, fault log and map. Imported files are validated; recording, undo and finish are unavailable while viewing them. **Back to my lesson** returns to your previous lesson. Uploads are read locally in the browser and are not sent to a server. Older exports with a learner name still open, but the name is not displayed.
+Each fault contains its category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing/denied GPS is shown explicitly. A fix must be within 15 seconds of the fault time to attach to it. Pending fixes are not included if you finish before they arrive. The map stores fault locations, not a continuous route. Map tiles need internet; locked/background phone location is not guaranteed.
 
-Lessons are saved in localStorage in this browser and origin. They are not synced across devices. Browser data clearing removes records; use Download lesson for a backup. Use HTTPS when hosting for mobile GPS; localhost works for desktop testing. Opening a plain file may restrict GPS or browser storage. Background or locked phone location is not guaranteed.
+Share links are snapshots, contain the recorded locations, and can be read by anyone who receives them. JSON is encoded directly for small reports. Larger reports use a versioned `v1.` compressed JSON value to keep the same query-based flow; both formats open automatically. URLs are limited to 7,000 characters for compatibility. If even a compressed report exceeds that limit, it remains on the marking sheet and offers JSON download instead. Data is encoded, not encrypted. No shortener or external lesson database is used.
 
-Based on https://assets.publishing.service.gov.uk/media/62a7437cd3bf7f03667c667a/dl25-driving-test-report.pdf (Crown copyright). Independent instructor practice tool, not an official DVSA test or an automated pass/fail assessment.
+Checks: `node --test tests/import.test.cjs`
 
-Leaflet 1.9.4: https://leafletjs.com (BSD-2-Clause). Map attribution is displayed on the map.
+Based on https://assets.publishing.service.gov.uk/media/62a7437cd3bf7f03667c667a/dl25-driving-test-report.pdf (Crown copyright). Independent instructor practice tool, not an official DVSA test or automated pass/fail assessment.
+
+Bundled dependencies: Leaflet 1.9.4 (BSD-2-Clause) and LZ-String 1.5.0 (MIT); licence files are in `vendor/`. OpenStreetMap attribution appears on the map.

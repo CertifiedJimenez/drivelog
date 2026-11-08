@@ -2,3 +2,5 @@
 @media(max-width:900px){#sheet{columns:2}}@media(max-width:540px){header{padding:15px 14px}h1{font-size:18px}main{padding:15px 12px}.lesson button{padding:10px;font-size:11px}#sheet{columns:1}.group{margin-bottom:10px}.group h2{padding:9px 12px}.fault{font-size:14px;min-height:46px}.counts{gap:10px;font-size:10px}.counts strong{font-size:20px}.toolbar{gap:6px}.toolbar>button{font-size:11px}.results{padding:16px}#map{height:270px}dialog[open]{position:fixed;top:auto;bottom:12px;margin:0 auto}#historyDialog[open]{top:10%;bottom:auto}.type{min-height:65px}}
 
 #share{margin-top:16px;background:var(--green);color:white;border-color:var(--green)}#shareLink{display:block;width:100%;margin:10px 0 16px;padding:10px;resize:vertical;border:1px solid #d2dbd5;border-radius:5px;font:12px system-ui;color:#18382d}#shareDialog label{font-size:12px}#shareDialog p{line-height:1.6}
+
+.report-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.report-actions #share{margin:0}.report-actions #export{font-size:13px}
