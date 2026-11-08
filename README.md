@@ -10,7 +10,7 @@ Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localho
 
 - Normal URL: a fresh marking sheet. Tap a fault, then Minor, Serious (major) or Dangerous.
 - **Finish lesson**: redirects to a URL with the lesson JSON encoded in the `lesson` query parameter. No extra confirmation step.
-- URL with `?lesson=…`: read-only report with fault counts, log, map and **Share lesson**. Invalid links show an error rather than an editable sheet.
+- URL with `?lesson=…`: read-only report with start/end times, duration, category/fault/severity breakdown with counts and timestamps, log, map and **Share lesson**. Invalid links show an error rather than an editable sheet.
 - **Share lesson**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
 - **New lesson**: returns to the normal URL with a fresh sheet.
 

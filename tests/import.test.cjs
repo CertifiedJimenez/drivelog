@@ -23,7 +23,7 @@ test('plain URL always shows a fresh marking sheet without saved/upload controls
 test('Finish redirects to the encoded read-only report and includes GPS',()=>{
  const a=app();a.run('latestPosition={timestamp:Date.now(),coords:{latitude:51.5,longitude:-0.1,accuracy:8}}');record(a,'serious');a.element('finish').onclick();
  assert.ok(a.navigation);const data=JSON.parse(new URL(a.navigation).searchParams.get('lesson'));assert.ok(data.endedAt);assert.equal(data.faults[0].location.lat,51.5);assert.equal(data.faults[0].type,'serious');
- const report=app(a.navigation);assert.equal(report.run('readOnly'),true);assert.equal(report.element('sheet').hidden,true);assert.equal(report.element('finish').hidden,true);assert.equal(report.element('undo').hidden,true);assert.equal(report.element('share').hidden,false);assert.equal(report.element('reviewTitle').textContent,'Read-only lesson');assert.match(report.element('log').innerHTML,/51\.50000/);
+ const report=app(a.navigation);assert.equal(report.run('readOnly'),true);assert.equal(report.element('sheet').hidden,true);assert.equal(report.element('finish').hidden,true);assert.equal(report.element('undo').hidden,true);assert.equal(report.element('share').hidden,false);assert.equal(report.element('reviewTitle').textContent,'Results');assert.match(report.element('log').innerHTML,/51\.50000/);
  record(report);report.element('undo').onclick();report.element('finish').onclick();assert.equal(report.run('session.faults.length'),1);assert.equal(report.navigation,null);
  report.element('newLesson').onclick();assert.equal(report.navigation,'https://certifiedjimenez.github.io/drivelog/');
 });
@@ -42,4 +42,15 @@ test('native sharing and copy-link fallback work from a read-only report',async(
  const calls=[];const a=app(link(lesson()),{share:async data=>calls.push(data)});await a.element('share').onclick();assert.equal(calls.length,1);const recipient=app(calls[0].url);assert.equal(recipient.run('readOnly'),true);assert.equal(recipient.run('session.faults[0].type'),'serious');
  let copied='';const b=app(link(lesson()),{clipboard:{writeText:async text=>{copied=text;}}});await b.element('share').onclick();assert.equal(b.element('shareDialog').open,true);await b.element('copyLink').onclick();assert.ok(new URL(copied).searchParams.has('lesson'));
  const c=app(link(lesson()),{share:async()=>{throw {name:'AbortError'};}});await c.element('share').onclick();assert.notEqual(c.element('shareDialog').open,true);
+});
+
+test('results summarise category, fault, severity, counts and every recorded time',()=>{
+ const data=lesson();data.faults.push({...data.faults[0],time:'2026-11-08T10:12:03Z'});data.faults.push({...data.faults[0],fault:'Turning left',type:'minor'});
+ const a=app(link(data));const summary=a.element('reviewBreakdown').innerHTML;
+ assert.match(summary,/Junctions/);assert.match(summary,/Observation/);assert.match(summary,/Serious/);assert.match(summary,/<td>2<\/td>/);assert.match(summary,/Minor/);
+ assert.match(summary,/datetime="2026-11-08T10:10:00Z"/);assert.match(summary,/datetime="2026-11-08T10:12:03Z"/);
+ const timing=a.element('reviewTiming').innerHTML;assert.match(timing,/Started/);assert.match(timing,/Finished/);assert.match(timing,/30 min 0 sec/);
+ const header=html.slice(0,html.indexOf('</header>'));assert.match(header,/id="share"/);assert.match(header,/id="newLesson"/);
+ const empty=app(link({...lesson(),faults:[]}));assert.match(empty.element('reviewBreakdown').innerHTML,/No faults recorded/);
+ const unsafe=lesson();unsafe.faults[0].category='<img src=x onerror=alert(1)>';const safe=app(link(unsafe));assert.doesNotMatch(safe.element('reviewBreakdown').innerHTML,/<img/);
 });

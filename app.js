@@ -30,7 +30,7 @@ function counts(){return ['minor','serious','dangerous'].map(type=>({type,count:
 function render(){
  const ended=readOnly;
  $('counts').innerHTML=counts().map(({type,count})=>`<span class="${type}-text"><strong>${count}</strong>${labels[type]}</span>`).join('');
- $('reviewTitle').textContent=readOnly?'Read-only lesson':'Lesson finished';
+ $('reviewTitle').textContent='Results';
  $('newLesson').hidden=!readOnly;
  $('undo').hidden=readOnly;
  $('gps').hidden=ended;
@@ -45,8 +45,26 @@ function render(){
  $('sheet').innerHTML=groups.map(([category, faults], gi)=>`<section class="group"><h2>${escapeHTML(category)}</h2>${faults.map((fault,fi)=>{const records=session?.faults.filter(f=>f.category===category&&f.fault===fault)||[];const tally=['minor','serious','dangerous'].map(t=>{const n=records.filter(f=>f.type===t).length;return n?`<span class="${t}-text">${n} ${labels[t]}</span>`:'';}).filter(Boolean).join(' · ');return `<button class="fault" data-group="${gi}" data-fault="${fi}"><span>${escapeHTML(fault)}</span><span class="tally">${tally||'<span class="plus">＋</span>'}</span></button>`;}).join('')}</section>`).join('');
  const faults=session?.faults||[];
  $('log').innerHTML=faults.length?faults.map((f,i)=>`<li class="log-item"><span class="number" style="color:${colors[f.type]}">${i+1}</span><div class="body"><strong>${escapeHTML(f.category)} · ${escapeHTML(f.fault)}</strong><p><span class="${f.type}-text">${labels[f.type]}</span> · ${new Date(f.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}<br>${f.location?`<a href="https://www.openstreetmap.org/?mlat=${f.location.lat}&mlon=${f.location.lng}#map=18/${f.location.lat}/${f.location.lng}" target="_blank" rel="noreferrer">${f.location.lat.toFixed(5)}, ${f.location.lng.toFixed(5)} ↗</a> · accuracy ±${Math.round(f.location.accuracy)} m`:f.gpsPending?'Getting location…':'No GPS location recorded'}</p></div></li>`).reverse().join(''):'<li class="empty">No faults recorded yet.</li>';
- if(ended&&session){const located=faults.filter(f=>f.location).length;$('reviewText').textContent=`${new Date(session.startedAt).toLocaleString('en-GB')} · ${session.endedAt?Math.max(1,Math.round((Date.parse(session.endedAt)-Date.parse(session.startedAt))/60000))+' min.':'In progress snapshot.'} ${faults.length} faults recorded; ${located} with GPS locations. Select a pin on the map to review the fault.`;}
+ renderReview(faults);
  updateMap();
+}
+function renderReview(faults){
+ $('reviewTiming').innerHTML='';$('reviewBreakdown').innerHTML='';
+ if(!readOnly||!session)return;
+ const time=value=>new Date(value).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const start=new Date(session.startedAt),end=session.endedAt?new Date(session.endedAt):null;
+ const seconds=end?Math.max(0,Math.round((end-start)/1000)):null;
+ const duration=seconds===null?'In progress snapshot':`${Math.floor(seconds/60)} min ${seconds%60} sec`;
+ const located=faults.filter(f=>f.location).length;
+ $('reviewText').textContent=`${start.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · ${faults.length} ${faults.length===1?'fault':'faults'} recorded · ${located} with GPS locations`;
+ $('reviewTiming').innerHTML=[['Started',time(session.startedAt)],['Finished',end?time(session.endedAt):'Not finished'],['Duration',duration]].map(([label,value])=>`<div><dt>${label}</dt><dd>${escapeHTML(value)}</dd></div>`).join('');
+ const rows=new Map();
+ faults.forEach(f=>{
+  const key=JSON.stringify([f.category,f.fault,f.type]);
+  if(!rows.has(key))rows.set(key,{category:f.category,fault:f.fault,type:f.type,times:[]});
+  rows.get(key).times.push(f.time);
+ });
+ $('reviewBreakdown').innerHTML='<h3>Faults by category</h3>'+(rows.size?`<div class="summary-scroll"><table class="summary-table"><thead><tr><th scope="col">Category</th><th scope="col">Fault</th><th scope="col">Severity</th><th scope="col">Count</th><th scope="col">Recorded at</th></tr></thead><tbody>${[...rows.values()].map(row=>`<tr><td>${escapeHTML(row.category)}</td><td>${escapeHTML(row.fault)}</td><td><span class="severity-label ${row.type}-text">${labels[row.type]}</span></td><td>${row.times.length}</td><td class="recorded-times">${row.times.map(t=>`<time datetime="${escapeHTML(t)}">${time(t)}</time>`).join(' ')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No faults recorded.</p>');
 }
 function initMap(){if(!window.L){$('map').textContent='Map could not load. GPS coordinates are still saved in the fault log.';return;} map=L.map('map').setView([54,-2],5);markers=L.featureGroup().addTo(map);const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:19,referrerPolicy:'strict-origin'}).addTo(map);let tileFailures=0;tiles.on('tileerror',()=>{if(++tileFailures>3)$('mapInfo').textContent='Map tiles unavailable. GPS coordinates remain in the fault log.';});}
 function updateMap(){if(!map)return;markers.clearLayers();const faults=session?.faults||[];faults.forEach((f,i)=>{if(!f.location)return;L.marker([f.location.lat,f.location.lng],{icon:L.divIcon({className:'fault-pin',html:`<span style="background:${colors[f.type]};width:100%;height:100%;border-radius:50%;display:grid;place-items:center">${i+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]})}).addTo(markers).bindPopup(`<b>${i+1}. ${escapeHTML(f.category)}</b><br>${escapeHTML(f.fault)} · ${labels[f.type]}<br>${new Date(f.time).toLocaleTimeString('en-GB')}<br>GPS accuracy ±${Math.round(f.location.accuracy)} m`);});if(markers.getLayers().length)map.fitBounds(markers.getBounds(),{padding:[35,35],maxZoom:16});else if(latestPosition)map.setView([latestPosition.coords.latitude,latestPosition.coords.longitude],15);else map.setView([54,-2],5);}
