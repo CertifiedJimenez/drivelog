@@ -167,6 +167,23 @@ function loadSharedLesson(){
  }
  return true;
 }
+function setLayout(mode,save=false){
+ const layout=mode==='list'?'list':'grid';
+ $('sheet').dataset.layout=layout;
+ $('gridMode').setAttribute('aria-pressed',String(layout==='grid'));
+ $('listMode').setAttribute('aria-pressed',String(layout==='list'));
+ if(save){
+  try{
+   const path=new URL('.',window.location.href).pathname;
+   document.cookie=`drivelog-layout=${layout}; Max-Age=31536000; Path=${path}; SameSite=Lax${new URL(window.location.href).protocol==='https:'?'; Secure':''}`;
+  }catch{notify('Layout changed. Your browser could not save the preference.');}
+ }
+}
+let preferredLayout='grid';
+try{const value=document.cookie.split(';').map(part=>part.trim()).find(part=>part.startsWith('drivelog-layout='))?.slice('drivelog-layout='.length);if(value==='list')preferredLayout='list';}catch{}
+setLayout(preferredLayout);
+$('gridMode').onclick=()=>setLayout('grid',true);
+$('listMode').onclick=()=>setLayout('list',true);
 initMap();
 if(!loadSharedLesson()){createSession();render();}
 window.addEventListener('pagehide',stopGPS);

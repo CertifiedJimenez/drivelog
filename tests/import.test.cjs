@@ -5,13 +5,13 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-function app(href='https://certifiedjimenez.github.io/drivelog/',navigator={}){
- const elements=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],{value:'',hidden:false,disabled:false,innerHTML:'',textContent:'',handlers:{},addEventListener(t,fn){this.handlers[t]=fn;},showModal(){this.open=true;},close(){this.open=false;},scrollIntoView(){},focus(){},select(){}}]));
+function app(href='https://certifiedjimenez.github.io/drivelog/',navigator={},cookie=''){
+ const elements=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],{dataset:{},setAttribute(name,value){this[name]=value;},value:'',hidden:false,disabled:false,innerHTML:'',textContent:'',handlers:{},addEventListener(t,fn){this.handlers[t]=fn;},showModal(){this.open=true;},close(){this.open=false;},scrollIntoView(){},focus(){},select(){}}]));
  let navigation=null;
- const context=vm.createContext({crypto:require('node:crypto').webcrypto,console,URL,Blob,setTimeout(){},clearTimeout(){},document:{getElementById:id=>elements.get(id)},localStorage:{getItem(){throw Error('Should not read saved lessons');}},navigator,window:{location:{href,assign(url){navigation=url;}},addEventListener(){},scrollTo(){}}});
+ const context=vm.createContext({crypto:require('node:crypto').webcrypto,console,URL,Blob,setTimeout(){},clearTimeout(){},document:{get cookie(){return cookie;},set cookie(value){cookie=value;},getElementById:id=>elements.get(id)},localStorage:{getItem(){throw Error('Should not read saved lessons');}},navigator,window:{location:{href,assign(url){navigation=url;}},addEventListener(){},scrollTo(){}}});
  vm.runInContext(fs.readFileSync(path.join(root,'vendor/lz-string.min.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),context);
- return {run:code=>vm.runInContext(code,context),element:id=>elements.get(id),get navigation(){return navigation;}};
+ return {run:code=>vm.runInContext(code,context),element:id=>elements.get(id),get cookie(){return cookie;},get navigation(){return navigation;}};
 }
 function lesson(){return {startedAt:'2026-11-08T10:00:00Z',endedAt:'2026-11-08T10:30:00Z',faults:[{category:'Junctions',fault:'Observation',type:'serious',time:'2026-11-08T10:10:00Z',location:{lat:51.5,lng:-0.1,accuracy:10,timestamp:'2026-11-08T10:10:00Z'}}]};}
 function link(data){const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',JSON.stringify(data));return u.href;}
@@ -66,4 +66,11 @@ test('old JSON and v1 compressed links remain readable',()=>{
  const a=app();const data=lesson();const json=JSON.stringify(data);const encoded=a.run(`'v1.'+LZString.compressToEncodedURIComponent(${JSON.stringify(json)})`);
  const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',encoded);
  for(const url of [link(data),u.href]){const report=app(url);assert.equal(report.run('readOnly'),true);assert.equal(report.run('session.faults[0].type'),'serious');}
+});
+
+test('Grid is default and footer layout preference persists in a cookie',()=>{
+ const a=app();assert.equal(a.element('sheet').dataset.layout,'grid');assert.equal(a.element('gridMode')['aria-pressed'],'true');
+ a.element('listMode').onclick();assert.equal(a.element('sheet').dataset.layout,'list');assert.equal(a.element('listMode')['aria-pressed'],'true');assert.match(a.cookie,/drivelog-layout=list/);assert.match(a.cookie,/Max-Age=31536000/);assert.match(a.cookie,/Path=\/drivelog\//);assert.match(a.cookie,/SameSite=Lax; Secure/);
+ const restored=app(undefined,{},a.cookie);assert.equal(restored.element('sheet').dataset.layout,'list');restored.element('gridMode').onclick();assert.equal(restored.element('sheet').dataset.layout,'grid');assert.match(restored.cookie,/drivelog-layout=grid/);
+ const invalid=app(undefined,{},'drivelog-layout=unknown');assert.equal(invalid.element('sheet').dataset.layout,'grid');
 });

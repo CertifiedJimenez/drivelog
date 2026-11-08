@@ -14,6 +14,8 @@ Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localho
 - **Share**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
 - **New exam**: returns to the normal URL with a fresh sheet.
 
+The footer’s **Grid / List** control changes the marking sheet layout. Grid is the default. A `drivelog-layout` cookie remembers the choice for one year on this app path, with SameSite=Lax and Secure on HTTPS. This preference cookie contains no test or GPS data.
+
 There is no saved-lesson list, JSON upload/download, account or server-side lesson storage. An unfinished sheet is held only in the current page; finish and share it before refreshing/closing the page. Completed reports reload directly from their URL. Existing saved data from earlier versions is left untouched but is no longer read.
 
 Each fault contains its category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing/denied GPS is shown explicitly. A fix must be within 15 seconds of the fault time to attach to it. Pending fixes are not included if you finish before they arrive. The map stores fault locations, not a continuous route. Map tiles send only the site origin as the referrer (never the lesson query), as required by OpenStreetMap’s tile policy. Map tiles need internet; locked/background phone location is not guaranteed.
