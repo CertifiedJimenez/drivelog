@@ -15,4 +15,6 @@ header{flex-wrap:wrap}.header-actions{display:flex;align-items:center;gap:8px;ma
 
 @media(max-width:540px){#sheet{columns:2;column-gap:8px}.group{margin-bottom:8px}.group h2{padding:9px 8px;font-size:11px;line-height:1.35;overflow-wrap:anywhere}.fault{padding:10px 8px;font-size:12px;line-height:1.35;min-height:46px;gap:6px}.fault>span:first-child{min-width:0;overflow-wrap:anywhere}.fault .tally{white-space:normal;font-size:9px;max-width:65px;flex-shrink:0}.fault .plus{font-size:18px}}
 
-.layout-control{display:inline}.layout-control a{color:inherit;text-underline-offset:2px}.layout-control a[aria-current="true"]{font-weight:600;color:var(--green)}#sheet[data-layout="list"]{columns:1}@media(max-width:540px){#sheet[data-layout="list"] .group h2{font-size:13px;padding:9px 12px}#sheet[data-layout="list"] .fault{font-size:14px;padding:11px 12px}}
+.layout-control{display:inline}.layout-control a{color:inherit;text-underline-offset:2px}#sheet[data-layout="list"]{columns:1}@media(max-width:540px){#sheet[data-layout="list"] .group h2{font-size:13px;padding:9px 12px}#sheet[data-layout="list"] .fault{font-size:14px;padding:11px 12px}}
+
+footer{padding-top:16px;font-size:11px;line-height:1.5}footer p{margin:0 0 6px}.footer-note{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.layout-control a{white-space:nowrap;color:#536d5c}

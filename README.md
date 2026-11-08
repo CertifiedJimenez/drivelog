@@ -14,7 +14,7 @@ Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localho
 - **Share**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
 - **New exam**: returns to the normal URL with a fresh sheet.
 
-On the marking page only, inline **grid / list** links in the footer sentence change the sheet layout. Grid is the default. A `drivelog-layout` cookie remembers the choice for one year on this app path, with SameSite=Lax and Secure on HTTPS. This preference cookie contains no test or GPS data.
+On the marking page only, a single inline **Switch to List / Switch to Grid** link in the compact footer changes the sheet layout and always offers the alternative view. Grid is the default. A `drivelog-layout` cookie remembers the choice for one year on this app path, with SameSite=Lax and Secure on HTTPS. This preference cookie contains no test or GPS data.
 
 There is no saved-lesson list, JSON upload/download, account or server-side lesson storage. An unfinished sheet is held only in the current page; finish and share it before refreshing/closing the page. Completed reports reload directly from their URL. Existing saved data from earlier versions is left untouched but is no longer read.
 

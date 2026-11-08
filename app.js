@@ -171,8 +171,7 @@ function loadSharedLesson(){
 function setLayout(mode,save=false){
  const layout=mode==='list'?'list':'grid';
  $('sheet').dataset.layout=layout;
- $('gridMode').setAttribute('aria-current',String(layout==='grid'));
- $('listMode').setAttribute('aria-current',String(layout==='list'));
+ $('layoutToggle').textContent=layout==='grid'?'Switch to List':'Switch to Grid';
  if(save){
   try{
    const path=new URL('.',window.location.href).pathname;
@@ -183,8 +182,7 @@ function setLayout(mode,save=false){
 let preferredLayout='grid';
 try{const value=document.cookie.split(';').map(part=>part.trim()).find(part=>part.startsWith('drivelog-layout='))?.slice('drivelog-layout='.length);if(value==='list')preferredLayout='list';}catch{}
 setLayout(preferredLayout);
-$('gridMode').onclick=()=>setLayout('grid',true);
-$('listMode').onclick=()=>setLayout('list',true);
+$('layoutToggle').onclick=()=>setLayout($('sheet').dataset.layout==='grid'?'list':'grid',true);
 initMap();
 if(!loadSharedLesson()){createSession();render();}
 window.addEventListener('pagehide',stopGPS);
