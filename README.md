@@ -10,7 +10,9 @@ A plain HTML, CSS and JavaScript app based on the DVSA DL25 fault sheet.
 3. Tap a fault, then choose Minor, Serious (major) or Dangerous. That records it.
 4. Finish the lesson to review the log, map and download the JSON record.
 
-Learner name is optional. Every fault stores category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing or denied GPS is shown explicitly, without inventing a location. A fix must be within 15 seconds of the fault time to attach to the record. Leaflet is bundled locally; OpenStreetMap tiles need internet. The map does not draw or store a continuous route.
+Every fault stores category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing or denied GPS is shown explicitly, without inventing a location. A fix must be within 15 seconds of the fault time to attach to the record. Leaflet is bundled locally; OpenStreetMap tiles need internet. The map does not draw or store a continuous route.
+
+**Upload JSON** opens an exported lesson as a temporary read-only view with its counts, fault log and map. Imported files are validated; recording, undo and finish are unavailable while viewing them. **Back to my lesson** returns to your previous lesson. Uploads are read locally in the browser and are not sent to a server. Older exports with a learner name still open, but the name is not displayed.
 
 Lessons are saved in localStorage in this browser and origin. They are not synced across devices. Browser data clearing removes records; use Download lesson for a backup. Use HTTPS when hosting for mobile GPS; localhost works for desktop testing. Opening a plain file may restrict GPS or browser storage. Background or locked phone location is not guaranteed.
 
