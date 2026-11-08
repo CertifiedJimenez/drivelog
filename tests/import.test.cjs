@@ -69,8 +69,9 @@ test('old JSON and v1 compressed links remain readable',()=>{
 });
 
 test('Grid is default and footer layout preference persists in a cookie',()=>{
- const a=app();assert.equal(a.element('sheet').dataset.layout,'grid');assert.equal(a.element('gridMode')['aria-pressed'],'true');
- a.element('listMode').onclick();assert.equal(a.element('sheet').dataset.layout,'list');assert.equal(a.element('listMode')['aria-pressed'],'true');assert.match(a.cookie,/drivelog-layout=list/);assert.match(a.cookie,/Max-Age=31536000/);assert.match(a.cookie,/Path=\/drivelog\//);assert.match(a.cookie,/SameSite=Lax; Secure/);
+ const a=app();assert.equal(a.element('sheet').dataset.layout,'grid');assert.equal(a.element('gridMode')['aria-current'],'true');
+ a.element('listMode').onclick();assert.equal(a.element('sheet').dataset.layout,'list');assert.equal(a.element('listMode')['aria-current'],'true');assert.match(a.cookie,/drivelog-layout=list/);assert.match(a.cookie,/Max-Age=31536000/);assert.match(a.cookie,/Path=\/drivelog\//);assert.match(a.cookie,/SameSite=Lax; Secure/);
  const restored=app(undefined,{},a.cookie);assert.equal(restored.element('sheet').dataset.layout,'list');restored.element('gridMode').onclick();assert.equal(restored.element('sheet').dataset.layout,'grid');assert.match(restored.cookie,/drivelog-layout=grid/);
+ assert.equal(a.element('layoutControl').hidden,false);const results=app(link(lesson()));assert.equal(results.element('layoutControl').hidden,true);
  const invalid=app(undefined,{},'drivelog-layout=unknown');assert.equal(invalid.element('sheet').dataset.layout,'grid');
 });

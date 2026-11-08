@@ -37,6 +37,7 @@ function render(){
  $('sheet').hidden=ended;
  $('instruction').hidden=ended;
  $('review').hidden=!ended;
+ $('layoutControl').hidden=readOnly;
  $('finish').hidden=ended;
  $('finish').disabled=!session;
  $('undo').disabled=ended||!session?.faults.length;
@@ -170,8 +171,8 @@ function loadSharedLesson(){
 function setLayout(mode,save=false){
  const layout=mode==='list'?'list':'grid';
  $('sheet').dataset.layout=layout;
- $('gridMode').setAttribute('aria-pressed',String(layout==='grid'));
- $('listMode').setAttribute('aria-pressed',String(layout==='list'));
+ $('gridMode').setAttribute('aria-current',String(layout==='grid'));
+ $('listMode').setAttribute('aria-current',String(layout==='list'));
  if(save){
   try{
    const path=new URL('.',window.location.href).pathname;
