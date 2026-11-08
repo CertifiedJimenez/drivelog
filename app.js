@@ -94,8 +94,8 @@ function parseLessonJSON(text){
  const data=JSON.parse(text);
  const validDate=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
  const validText=value=>typeof value==='string'&&value.trim().length>0&&value.length<=200;
- if(!data||typeof data!=='object'||Array.isArray(data)||!validDate(data.startedAt)||!Array.isArray(data.faults)||data.faults.length>10000)throw new Error('Invalid lesson report.');
- if(data.endedAt!=null&&(!validDate(data.endedAt)||Date.parse(data.endedAt)<Date.parse(data.startedAt)))throw new Error('The lesson end time is invalid.');
+ if(!data||typeof data!=='object'||Array.isArray(data)||!validDate(data.startedAt)||!Array.isArray(data.faults)||data.faults.length>10000)throw new Error('Invalid test report.');
+ if(data.endedAt!=null&&(!validDate(data.endedAt)||Date.parse(data.endedAt)<Date.parse(data.startedAt)))throw new Error('The test end time is invalid.');
  const faults=data.faults.map((f,i)=>{
   if(!f||!validText(f.category)||!validText(f.fault)||!['minor','serious','dangerous'].includes(f.type)||!validDate(f.time))throw new Error(`Fault ${i+1} has invalid details.`);
   let location=null;
@@ -121,7 +121,7 @@ function createShareURL(data){
  // Keep small links as encoded JSON; compact larger reports to fit messaging/browser limits.
  url.searchParams.set('lesson',json);
  if(url.href.length>maxSharedURLLength)url.searchParams.set('lesson','v1.'+LZString.compressToEncodedURIComponent(json));
- if(url.href.length>maxSharedURLLength)throw new Error('This lesson is too large for a reliable share link. The sheet is still available here.');
+ if(url.href.length>maxSharedURLLength)throw new Error('This test is too large for a reliable share link. The sheet is still available here.');
  return url.href;
 }
 function showShareLink(url){$('shareLink').value=url;$('shareDialog').showModal();}
@@ -130,29 +130,29 @@ $('share').onclick=async()=>{
  let url;try{url=createShareURL(session);}catch(error){notify(error.message);return;}
  // Call share during this tap, without asynchronous encoding losing user activation.
  if(navigator.share){
-  try{await navigator.share({title:'Driving lesson',url});return;}
+  try{await navigator.share({title:'Driving test',url});return;}
   catch(error){if(error.name==='AbortError')return;}
  }
  showShareLink(url);
 };
 $('copyLink').onclick=async()=>{
- try{await navigator.clipboard.writeText($('shareLink').value);notify('Lesson link copied.');$('shareDialog').close();}
- catch{$('shareLink').focus();$('shareLink').select();notify('Select and copy the lesson link above.');}
+ try{await navigator.clipboard.writeText($('shareLink').value);notify('Test link copied.');$('shareDialog').close();}
+ catch{$('shareLink').focus();$('shareLink').select();notify('Select and copy the test link above.');}
 };
 $('closeShare').onclick=()=>$('shareDialog').close();
 function loadSharedLesson(){
  const url=new URL(window.location.href);if(!url.searchParams.has('lesson'))return false;
  readOnly=true;
  try{
-  if(url.href.length>maxSharedURLLength)throw new Error('Lesson link is too large.');
+  if(url.href.length>maxSharedURLLength)throw new Error('Test link is too large.');
   let text=url.searchParams.get('lesson');
   if(text.startsWith('v1.'))text=LZString.decompressFromEncodedURIComponent(text.slice(3));
-  if(typeof text!=='string'||text.length>2*1024*1024)throw new Error('Invalid lesson data.');
+  if(typeof text!=='string'||text.length>2*1024*1024)throw new Error('Invalid test data.');
   openReadOnlyLesson(parseLessonJSON(text));
  }
  catch{
-  session=null;render();$('reviewTitle').textContent='Lesson link unavailable';
-  $('reviewText').textContent='This link is invalid or incomplete. Ask for a new lesson link.';
+  session=null;render();$('reviewTitle').textContent='Test link unavailable';
+  $('reviewText').textContent='This link is invalid or incomplete. Ask for a new test link.';
  }
  return true;
 }

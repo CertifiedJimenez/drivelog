@@ -9,10 +9,10 @@ python3 -m http.server 8080 --bind 127.0.0.1
 Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localhost also works.
 
 - Normal URL: a fresh marking sheet. Tap a fault, then Minor, Serious (major) or Dangerous.
-- **Finish lesson**: redirects to a URL with the lesson JSON encoded in the `lesson` query parameter. No extra confirmation step.
-- URL with `?lesson=…`: read-only report with start/end times, duration, category/fault/severity breakdown with counts and timestamps, log, map and **Share lesson**. Invalid links show an error rather than an editable sheet.
-- **Share lesson**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
-- **New lesson**: returns to the normal URL with a fresh sheet.
+- **Finish exam**: redirects to a URL with the lesson JSON encoded in the `lesson` query parameter. No extra confirmation step.
+- URL with `?lesson=…`: read-only report with start/end times, duration, category/fault/severity breakdown with counts and timestamps, log, map and **Share**. Invalid links show an error rather than an editable sheet.
+- **Share**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
+- **New exam**: returns to the normal URL with a fresh sheet.
 
 There is no saved-lesson list, JSON upload/download, account or server-side lesson storage. An unfinished sheet is held only in the current page; finish and share it before refreshing/closing the page. Completed reports reload directly from their URL. Existing saved data from earlier versions is left untouched but is no longer read.
 

@@ -30,7 +30,7 @@ test('Finish redirects to the encoded read-only report and includes GPS',()=>{
 test('zero-fault lessons can finish and open as a report',()=>{const a=app();a.element('finish').onclick();const b=app(a.navigation);assert.equal(b.run('readOnly'),true);assert.equal(b.run('session.faults.length'),0);assert.equal(b.element('share').hidden,false);});
 test('invalid query parameters never expose an editable sheet',()=>{
  for(const encoded of ['broken','',JSON.stringify({faults:[]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],type:'__proto__'}]}),JSON.stringify({...lesson(),faults:[{...lesson().faults[0],location:{lat:91,lng:0,accuracy:5}}]}),'v1.invalid']){
-  const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',encoded);const a=app(u.href);assert.equal(a.run('readOnly'),true);assert.equal(a.element('sheet').hidden,true);assert.equal(a.element('share').hidden,true);assert.equal(a.element('reviewTitle').textContent,'Lesson link unavailable');
+  const u=new URL('https://certifiedjimenez.github.io/drivelog/');u.searchParams.set('lesson',encoded);const a=app(u.href);assert.equal(a.run('readOnly'),true);assert.equal(a.element('sheet').hidden,true);assert.equal(a.element('share').hidden,true);assert.equal(a.element('reviewTitle').textContent,'Test link unavailable');
  }
 });
 test('large reports compact the JSON inside the query and preserve every fault',()=>{
