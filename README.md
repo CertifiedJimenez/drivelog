@@ -1,29 +1,64 @@
-# Driving fault sheet
+# DriveLog
 
-A plain HTML, CSS and JavaScript app based on the DVSA DL25 fault sheet.
+A mobile-friendly driving test marking sheet based on the DVSA DL25 report. Record faults in two taps, capture their GPS locations, and share a read-only results page through a single link.
 
-Run locally:
+**[Open DriveLog](https://certifiedjimenez.github.io/drivelog/)**
+
+## Using the app
+
+1. Open the app to start a fresh marking sheet.
+2. Tap a fault, then select **Minor**, **Serious** (major), or **Dangerous**. Each mark records its category, fault type, severity and time, plus GPS coordinates when available.
+3. Use **Undo** to remove the most recent mark.
+4. Select **Finish** to open the results through an encoded URL.
+5. Select **Share** to send the results through the phone’s share sheet, including WhatsApp when available. Browsers without native sharing offer a link to copy.
+6. Select **New** to return to a fresh marking sheet.
+
+Results include severity totals, start and finish times, duration, a category breakdown with counts and recorded times, and a map of located faults. Results cannot be edited. A test with no recorded faults can also be finished and shared.
+
+## Grid and list views
+
+The marking sheet defaults to a grid: two columns on mobile and up to three on desktop. The footer offers one inline link, **Switch to List** or **Switch to Grid**, showing the alternative layout. This option appears only on the marking page.
+
+A `drivelog-layout` preference cookie remembers the choice for one year. It contains only the layout choice, with no test or location data.
+
+## Sharing and data
+
+The app uses plain HTML, CSS and JavaScript, hosted on GitHub Pages. It needs no account, build step or backend database.
+
+- The normal URL opens the marking sheet. A URL containing `?lesson=…` opens read-only results; the parameter name remains compatible with earlier shared links.
+- New links contain the JSON compressed with LZ-String and encoded using a URL-safe Base64 alphabet, prefixed with `v2.`. Earlier raw-JSON and `v1.` links still open.
+- Links contain a snapshot of the complete report, including recorded GPS locations. Anyone with the link can view it. Encoding is not encryption, and shared reports do not update after sharing.
+- An unfinished test exists only in the current page. Finish and keep its results link before refreshing or closing the page. Reports can be reopened from their links.
+- There is no saved-test list or JSON upload/download. Earlier browser-stored records are left untouched but are no longer loaded.
+
+URLs are limited to 7,000 characters for compatibility. If a compressed report exceeds that limit, the app displays an error and keeps the marking sheet available. Malformed links show an error rather than an editable sheet.
+
+## GPS and maps
+
+Location permission is requested when selecting the first fault. Missing or denied GPS is shown explicitly; faults can still be recorded without it. A GPS fix must be within 15 seconds of the mark time. Finishing before a pending fix arrives excludes that fix from the results.
+
+The map shows individual fault locations, not a continuous route. OpenStreetMap tiles need internet. Tile requests send only the site origin as the referrer, keeping the report query out of it. Background or locked-phone location is not guaranteed.
+
+## Run locally
+
+From this directory:
+
 ```sh
 python3 -m http.server 8080 --bind 127.0.0.1
 ```
-Visit http://localhost:8080. Mobile GPS needs HTTPS when hosted; desktop localhost also works.
 
-- Normal URL: a fresh marking sheet. Tap a fault, then Minor, Serious (major) or Dangerous.
-- **Finish exam**: redirects to a URL with the lesson JSON encoded in the `lesson` query parameter. No extra confirmation step.
-- URL with `?lesson=…`: read-only report with start/end times, duration, category/fault/severity breakdown with counts and timestamps, log, map and **Share**. Invalid links show an error rather than an editable sheet.
-- **Share**: opens the native share sheet where supported (including WhatsApp if installed), or a copy-link fallback.
-- **New exam**: returns to the normal URL with a fresh sheet.
+Open [localhost:8080](http://localhost:8080). GPS requires HTTPS when hosted; desktop localhost also works. Opening `index.html` directly may restrict location access.
 
-On the marking page only, a single inline **Switch to List / Switch to Grid** link in the compact footer changes the sheet layout and always offers the alternative view. Grid is the default. A `drivelog-layout` cookie remembers the choice for one year on this app path, with SameSite=Lax and Secure on HTTPS. This preference cookie contains no test or GPS data.
+Run the automated checks with Node.js:
 
-There is no saved-lesson list, JSON upload/download, account or server-side lesson storage. An unfinished sheet is held only in the current page; finish and share it before refreshing/closing the page. Completed reports reload directly from their URL. Existing saved data from earlier versions is left untouched but is no longer read.
+```sh
+node --test tests/import.test.cjs
+```
 
-Each fault contains its category, fault type, severity and time. GPS coordinates, accuracy and fix time are included when available. Location is requested at the first fault selection. Missing/denied GPS is shown explicitly. A fix must be within 15 seconds of the fault time to attach to it. Pending fixes are not included if you finish before they arrive. The map stores fault locations, not a continuous route. Map tiles send only the site origin as the referrer (never the lesson query), as required by OpenStreetMap’s tile policy. Map tiles need internet; locked/background phone location is not guaranteed.
+Checks cover marking and undo, finishing into a read-only URL, encoded link round trips and compatibility, validation, sharing fallbacks, results breakdowns, and the layout preference cookie.
 
-Share links are snapshots, contain the recorded locations, and can be read by anyone who receives them. All new links use a `v2.` value containing compressed JSON encoded with Base64URL (letters, digits, hyphens and underscores; no padding). Older direct-JSON and `v1.` compressed links still open. URLs are limited to 7,000 characters for compatibility. If even a compressed report exceeds that limit, it remains on the marking sheet and shows an error without discarding its data. Data is encoded, not encrypted. No shortener or external lesson database is used.
+## Reference and credits
 
-Checks: `node --test tests/import.test.cjs`
+Based on the [DVSA DL25 driving test report](https://assets.publishing.service.gov.uk/media/62a7437cd3bf7f03667c667a/dl25-driving-test-report.pdf) (Crown copyright). DriveLog is an independent practice tool, not an official DVSA test or an automated pass/fail assessment.
 
-Based on https://assets.publishing.service.gov.uk/media/62a7437cd3bf7f03667c667a/dl25-driving-test-report.pdf (Crown copyright). Independent instructor practice tool, not an official DVSA test or automated pass/fail assessment.
-
-Bundled dependencies: Leaflet 1.9.4 (BSD-2-Clause) and LZ-String 1.5.0 (MIT); licence files are in `vendor/`. OpenStreetMap attribution appears on the map.
+Bundled libraries: [Leaflet 1.9.4](https://leafletjs.com/) (BSD-2-Clause) and [LZ-String 1.5.0](https://github.com/pieroxy/lz-string) (MIT). Licence files are in `vendor/`. Map data is credited to OpenStreetMap contributors on the map.
