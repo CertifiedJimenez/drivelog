@@ -123,7 +123,7 @@ function encodeLessonValue(data){
 function decodeLessonValue(value){
  if(value.startsWith('v2.')){
   const token=value.slice(3);
-  if(!/^[A-Za-z0-9_-]+$/.test(token)||token.length%4===1)throw new Error('Invalid test encoding.');
+  if(!/^[A-Za-z0-9_-]+$/.test(token))throw new Error('Invalid test encoding.');
   const base64=token.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-token.length%4)%4);
   return LZString.decompressFromBase64(base64);
  }

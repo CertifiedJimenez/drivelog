@@ -75,3 +75,13 @@ test('Grid is default and footer layout preference persists in a cookie',()=>{
  assert.equal(a.element('layoutControl').hidden,false);const results=app(link(lesson()));assert.equal(results.element('layoutControl').hidden,true);
  const invalid=app(undefined,{},'drivelog-layout=unknown');assert.equal(invalid.element('sheet').dataset.layout,'grid');
 });
+
+test('encoded links reopen for every LZ Base64 padding length',()=>{
+ const a=app();const lengths=new Set();
+ for(let i=1;i<=500;i++){
+  const data=lesson();data.faults[0].fault=require('node:crypto').createHash('sha256').update(String(i)).digest('hex').slice(0,(i%64)+1);
+  const encoded=a.run(`encodeLessonValue(${JSON.stringify(data)})`);lengths.add((encoded.length-3)%4);
+  const decoded=JSON.parse(a.run(`decodeLessonValue(${JSON.stringify(encoded)})`));assert.equal(decoded.faults[0].fault,data.faults[0].fault);
+ }
+ assert.equal(lengths.size,4);
+});
