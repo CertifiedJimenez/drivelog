@@ -33,6 +33,12 @@ The app uses plain HTML, CSS and JavaScript, hosted on GitHub Pages. It needs no
 
 URLs are limited to 7,000 characters for compatibility. If a compressed report exceeds that limit, the app displays an error and keeps the marking sheet available. Malformed links show an error rather than an editable sheet.
 
+## Social previews
+
+Open Graph and X/Twitter Card metadata are included in the initial HTML, with a generic 1200 × 630 PNG, title and description. WhatsApp, Facebook, LinkedIn, iMessage, Telegram, X and other clients can use the metadata they support. App settings, preview caches and platform behaviour determine the final appearance and whether the full URL is displayed; hiding the URL cannot be forced by the site.
+
+The preview contains no exam-specific data. There is no static `og:url` or canonical URL pointing to the blank sheet, because shared links must retain their encoded results query. The generated artwork and icons are in `assets/`; regenerate them with `python3 scripts/create-preview.py` on macOS with Pillow and the system Arial fonts available.
+
 ## GPS and maps
 
 Location permission is requested when selecting the first fault. Missing or denied GPS is shown explicitly; faults can still be recorded without it. A GPS fix must be within 15 seconds of the mark time. Finishing before a pending fix arrives excludes that fix from the results.

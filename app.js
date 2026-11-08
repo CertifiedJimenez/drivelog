@@ -143,7 +143,7 @@ $('share').onclick=async()=>{
  let url;try{url=createShareURL(session);}catch(error){notify(error.message);return;}
  // Call share during this tap, without asynchronous encoding losing user activation.
  if(navigator.share){
-  try{await navigator.share({title:'Driving test',url});return;}
+  try{await navigator.share({title:'Driving Test Results',url});return;}
   catch(error){if(error.name==='AbortError')return;}
  }
  showShareLink(url);
