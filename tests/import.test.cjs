@@ -3,13 +3,13 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
-function app() {
+function app(href='https://certifiedjimenez.github.io/drivelog/',navigator={}) {
   const elements = new Map(), storage = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, {value:'',hidden:false,disabled:false,innerHTML:'',textContent:'',handlers:{},files:[],addEventListener(t,fn){this.handlers[t]=fn;},showModal(){this.open=true;},close(){this.open=false;},scrollIntoView(){},click(){}});
     return elements.get(id);
   };
-  const context = vm.createContext({crypto:require('node:crypto').webcrypto,console,URL,Blob,setTimeout(){},clearTimeout(){},document:{getElementById:element},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},navigator:{},window:{addEventListener(){},scrollTo(){}}});
+  const context = vm.createContext({crypto:require('node:crypto').webcrypto,console,URL,Blob,setTimeout(){},clearTimeout(){},document:{getElementById:element},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},navigator,window:{location:{href},history:{replaceState(a,b,url){context.window.location.href=url;}},addEventListener(){},scrollTo(){}}});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),context);
   return {run:code=>vm.runInContext(code,context),element,storage};
 }
@@ -40,4 +40,25 @@ test('new recordings have no learner field and imports with no GPS work',()=>{
  const data=lesson();data.endedAt=null;data.faults[0].location=null;
  a.run(`openImportedLesson(parseLessonJSON(${JSON.stringify(JSON.stringify(data))}))`);
  assert.equal(a.run('session.faults[0].location'),null);assert.equal(a.element('review').hidden,false);assert.match(a.element('reviewText').textContent,/In progress snapshot/);
+});
+
+test('share links contain encoded JSON and open automatically read-only',()=>{
+ const a=app();const original=lesson();original.faults[0].category='Signs & signals / 道路';
+ const link=a.run(`createShareURL(${JSON.stringify(original)})`);
+ const decoded=JSON.parse(new URL(link).searchParams.get('lesson'));
+ assert.equal(decoded.faults[0].category,original.faults[0].category);
+ assert.equal(decoded.faults[0].location.lat,51.5);assert.equal(Object.hasOwn(decoded,'learner'),false);
+ const recipient=app(link);assert.equal(recipient.run('readOnly'),true);assert.equal(recipient.run('session.faults[0].type'),'serious');assert.equal(recipient.element('sheet').hidden,true);assert.equal(recipient.run('lessons.length'),0);
+ recipient.element('closeImport').onclick();assert.equal(recipient.run('session'),null);assert.equal(recipient.run('new URL(window.location.href).searchParams.has("lesson")'),false);
+});
+test('invalid and oversized links are rejected without enabling a false read-only view',()=>{
+ const a=app('https://certifiedjimenez.github.io/drivelog/?lesson=broken');assert.equal(a.run('readOnly'),false);assert.match(a.element('message').textContent,/invalid or incomplete/);
+ assert.throws(()=>a.run(`createShareURL({...${JSON.stringify(lesson())},faults:Array.from({length:500},()=>(${JSON.stringify(lesson().faults[0])}))})`),/too large/);
+});
+test('native sharing uses the URL and cancellation is quiet',async()=>{
+ const calls=[];const a=app(undefined,{share:async data=>{calls.push(data);}});a.run("selected={category:'Control',fault:'Steering'};record('minor')");await a.element('share').onclick();assert.equal(calls.length,1);assert.ok(new URL(calls[0].url).searchParams.has('lesson'));assert.notEqual(a.element('shareDialog').open,true);
+ const b=app(undefined,{share:async()=>{throw {name:'AbortError'};}});b.run("selected={category:'Control',fault:'Steering'};record('minor')");await b.element('share').onclick();assert.notEqual(b.element('shareDialog').open,true);
+});
+test('browsers without native sharing get a copyable link',async()=>{
+ let copied='';const a=app(undefined,{clipboard:{writeText:async text=>{copied=text;}}});a.run("selected={category:'Control',fault:'Steering'};record('minor')");await a.element('share').onclick();assert.equal(a.element('shareDialog').open,true);await a.element('copyLink').onclick();assert.ok(new URL(copied).searchParams.has('lesson'));
 });
